@@ -5,6 +5,8 @@ class Text
   # Should not be returned.
 
   def initialize(content)
+    # Instantiate the instance variable to be returned
+    @tokens = Array.new
     # Store the set of no_tag words from the file,
     # And the content, with filtered out punctuation
     # In all lowercase local variables
@@ -30,49 +32,32 @@ class Text
   # Does not match anything in the 
   # file do_not_tag.txt to @tokens
   def tokenize_into_tags
-    @tokens = Array.new
-
     # Alphabetize both arrays
     @no_tag_array.sort!
     @tokens_array.sort!
-    puts @tokens_array
-    puts ' '
-    puts @no_tag_array
-    puts ' '
-    # Get size of larger array so we know how many times to iterate
-    no_tag_length = @no_tag_array.length
-    tokens_length = @tokens_array.length
-    if no_tag_length > tokens_length
-      array_size = no_tag_length
-    else
-      array_size = tokens_length
-    end
 
     # Instantiate iterators
-    i = 0
     tokens_iterator = 0
     no_tag_iterator = 0
+
     # Loop through the two arrays of words to compare
+    # Until the array of content words is fully traversed
     while @tokens_array[tokens_iterator]
       # Check if the no_tag list has been fully traversed.
-      # And if so, append the rest of the tokens to @tokens
+      # And if so, append the rest of the tokens fom the input content to @tokens
       if @no_tag_array[no_tag_iterator]  == nil
-        if (@tokens_array[tokens_iterator])
           @tokens.push(@tokens_array[tokens_iterator])
           tokens_iterator+=1
-        end
       else
         # If no_tag is farther in the alphabet, add the token to
         # The return list of tags, and increment to the next token in @tokens_array
         if @no_tag_array[no_tag_iterator] > @tokens_array[tokens_iterator]
           @tokens.push(@tokens_array[tokens_iterator])
           tokens_iterator+=1
-          i+=1
         # If @tokens_array is farther in the alphabet, increment to 
         # The next no_tag word.
         elsif @no_tag_array[no_tag_iterator] < @tokens_array[tokens_iterator]
           no_tag_iterator+=1
-          i+=1
         # If they match, increment both array indices
         else
           # If there are duplicates in tokens_array, check them all against the current no_tag word
