@@ -1,4 +1,4 @@
-# This is the public object that should be used in the website. 
+# This is the public object that should be used in the website.
 #
 # Takes two params:
 #
@@ -6,38 +6,45 @@
 # collection- the corpus of other documents to compare it to.
 include TfIdf
 class TfIdf::WeightedTags
-	attr_reader :tf_idf_hash
+
 	def initialize(collection, document)
-		@collection_docs = collection
-		@term_doc = document
-		@tf_idf_hash = Hash.new(0.0)
+		@terms_and_tf_idf_scores = get_weighted_tags(collection, document)
 	end
 
-	def get_weighted_tags
-		@term_doc = TfIdf::TermsDocument.new(@term_doc)
-		@tf_hash = get_termsDoc_hash
-		# Instantiate collection
-		@collection = TfIdf::Collection.new(@collection_docs, @tf_hash)
-		@idf_hash = get_collection_hash
-		# Loop through all terms to finish calculations
-		# On tf and idf, and finally get the tf_idf score
-		@doc_size = @term_doc.quantity
-		@collection_size = @collection.quantity
-		@tf_hash.each do |term, tf|
-			@idf_hash[term] = 1 if @idf_hash[term] == 0
-			@tf = tf / @doc_size
-			@idf = Math.log(@collection_size / @idf_hash[term])
-			@tf_idf_hash[term] = @tf * @idf
-		end
-		return @tf_idf_hash
+	def all
+		@terms_and_tf_idf_scores.sort_by {|key, value| value}.reverse.to_h
+	end
+
+	def first(n = 1)
+		@terms_and_tf_idf_scores.sort_by {|key, value| value}.reverse[0...n].to_h
+	end
+
+	def tags(n = nil)
+		n ? @terms_and_tf_idf_scores.sort_by {|key, value| value}.reverse[0...n].to_h.keys : @terms_and_tf_idf_scores.sort_by {|key, value| value}.reverse.to_h.keys
+	end
+
+	def weighted_scores(n = nil)
+		n ? @terms_and_tf_idf_scores.sort_by {|key, value| value}.reverse[0...n].to_h.values : @terms_and_tf_idf_scores.sort_by {|key, value| value}.reverse.to_h.values
 	end
 
 	private
-	def get_termsDoc_hash
-		return @term_doc.get_terms_and_tf_scores
-	end
 
-	def get_collection_hash
-		return @collection.get_idf_hash
+	def get_weighted_tags(collection, document)
+		tf_idf_hash = Hash.new(0.0)
+		term_doc = TfIdf::Document.new(document)
+		@tf_hash = term_doc.terms_and_tf_scores
+		collection = TfIdf::Collection.new(collection, @tf_hash)
+		@idf_hash = collection.idf_hash
+		# Loop through all terms to finish calculations
+		# On tf and idf, and finally get the tf_idf score
+		doc_size = term_doc.size.to_f
+		collection_size = collection.size.to_f
+		@tf_hash.each do |term, tf_score|
+			@idf_hash[term] = 1 if @idf_hash[term] == 0
+			tf_score = tf_score / doc_size
+			idf_score = Math.log(collection_size / @idf_hash[term])
+			tf_idf_hash[term] = tf_score * idf_score
+		end
+		return tf_idf_hash
 	end
 end
